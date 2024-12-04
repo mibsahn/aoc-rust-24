@@ -10,9 +10,8 @@ pub fn part_one(input: &str) -> Option<u32> {
             .collect();
         let is_increasing = report[1] > report[0];
         for window in report.windows(2) {
-            if (is_increasing && window[1] < window[0])
-                || (!is_increasing && window[1] > window[0])
-                || (window[1].abs_diff(window[0]) < 1)
+            if (is_increasing && window[1] <= window[0])
+                || (!is_increasing && window[1] >= window[0])
                 || (window[1].abs_diff(window[0]) > 3)
             {
                 continue 'line;
@@ -31,38 +30,32 @@ pub fn part_two(input: &str) -> Option<u32> {
             .iter()
             .filter_map(|&s| s.parse::<i32>().ok())
             .collect();
-        let is_increasing = report[1] > report[0];
-        for window in report.windows(2) {
-            if (is_increasing && window[1] < window[0])
-                || (!is_increasing && window[1] > window[0])
-                || (window[1].abs_diff(window[0]) < 1)
-                || (window[1].abs_diff(window[0]) > 3)
+        let differences: Vec<i32> = report.windows(2).map(|pair| pair[1] - pair[0]).collect();
+        if (differences.iter().all(|&x| x > 0) || differences.iter().all(|&x| x < 0))
+            && differences.iter().all(|&x| x.abs() > 0 && x.abs() < 4)
+        {
+            count += 1;
+            continue;
+        }
+        for window in differences.windows(differences.len() - 1) {
+            if (window.iter().all(|&x| x > 0) || window.iter().all(|&x| x < 0))
+                && window.iter().all(|&x| x.abs() > 0 && x.abs() < 4)
             {
-                let differences: Vec<i32> =
-                    report.windows(2).map(|pair| pair[1] - pair[0]).collect();
-                for window in differences.windows(differences.len() - 1) {
-                    if (window.iter().all(|&x| x > 0) || window.iter().all(|&x| x < 0))
-                        && window.iter().all(|&x| x.abs() > 0 && x.abs() < 4)
-                    {
-                        count += 1;
-                        continue 'line;
-                    }
-                }
-                for i in 0..differences.len() - 1 {
-                    let mut dampener = differences.clone();
-                    dampener[i] += dampener[i + 1];
-                    dampener.remove(i + 1);
-                    if (dampener.iter().all(|&x| x > 0) || dampener.iter().all(|&x| x < 0))
-                        && dampener.iter().all(|&x| x.abs() > 0 && x.abs() < 4)
-                    {
-                        count += 1;
-                        continue 'line;
-                    }
-                }
+                count += 1;
                 continue 'line;
             }
         }
-        count += 1;
+        for i in 0..differences.len() - 1 {
+            let mut dampener = differences.clone();
+            dampener[i] += dampener[i + 1];
+            dampener.remove(i + 1);
+            if (dampener.iter().all(|&x| x > 0) || dampener.iter().all(|&x| x < 0))
+                && dampener.iter().all(|&x| x.abs() > 0 && x.abs() < 4)
+            {
+                count += 1;
+                continue 'line;
+            }
+        }
     }
     Some(count)
 }
